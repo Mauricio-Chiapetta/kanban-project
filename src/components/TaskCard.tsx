@@ -1,6 +1,15 @@
-import { Badge, Button, Card, Flex, Heading, Text } from "@radix-ui/themes";
+import {
+  Badge,
+  Button,
+  Card,
+  Flex,
+  Heading,
+  Text,
+  TextField,
+} from "@radix-ui/themes";
 import { Task, TaskPriority, TaskStatus } from "../entities/Task";
 import { useTasks } from "../hooks/useTasks";
+import { useState } from "react";
 
 interface TaskCardsProps {
   task: Task;
@@ -8,6 +17,27 @@ interface TaskCardsProps {
 
 export const TaskCard: React.FC<TaskCardsProps> = ({ task }) => {
   const { deleteTask, updateTasks } = useTasks();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTask, setEditedTask] = useState({
+    title: task.title,
+    description: task.description,
+  });
+
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+  };
+
+  const handleSave = async () => {
+    await updateTasks(task.id, editedTask);
+    setIsEditing(false);
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditedTask((prev) => ({ ...prev, [name]: value }));
+  };
 
   const getActionText = (status: TaskStatus) => {
     const actionTexts = {
@@ -56,35 +86,89 @@ export const TaskCard: React.FC<TaskCardsProps> = ({ task }) => {
 
   return (
     <Card>
-      <Flex align={"center"} gap={"4"}>
-        <Heading as="h3" size={"3"} weight={"bold"}>
-          {task.title}
-        </Heading>
-        <Badge color={getPriorityColor(task.priority)}>{task.priority}</Badge>
-      </Flex>
+      {isEditing ? (
+        <Flex direction="column" gap="2">
+          <Text as="label" htmlFor="title">
+            Título
+          </Text>
+          <TextField.Root
+            placeholder="Defina um título"
+            name="title"
+            id="title"
+            value={editedTask.title}
+            onChange={handleChange}
+          />
+          <Text as="label" htmlFor="description">
+            Descrição
+          </Text>
+          <TextField.Root
+            placeholder="Adicione uma descrição"
+            name="description"
+            id="description"
+            value={editedTask.description}
+            onChange={handleChange}
+          />
+          <Flex gap="2">
+            <Button
+              color="green"
+              onClick={handleSave}
+              style={{ cursor: "pointer" }}
+            >
+              Salvar
+            </Button>
+            <Button
+              color="red"
+              onClick={handleEditToggle}
+              style={{ cursor: "pointer" }}
+            >
+              Cancelar
+            </Button>
+          </Flex>
+        </Flex>
+      ) : (
+        <>
+          <Flex align={"center"} gap={"4"}>
+            <Heading as="h3" size={"3"} weight={"bold"}>
+              {task.title}
+            </Heading>
+            <Badge color={getPriorityColor(task.priority)}>
+              {task.priority}
+            </Badge>
+          </Flex>
 
-      <Text as="p" my={"4"}>
-        {task.description}
-      </Text>
+          <Text as="p" my={"4"}>
+            {task.description}
+          </Text>
 
-      <Flex gap={"2"}>
-        {task.status !== "done" && (
-          <Button
-            color={getActionColor(task.status)}
-            style={{ cursor: "pointer" }}
-            onClick={() => handleUpdate()}
-          >
-            {getActionText(task.status)}
-          </Button>
-        )}
-        <Button
-          color="red"
-          onClick={() => handleDelete(task.id)}
-          style={{ cursor: "pointer" }}
-        >
-          Excluir
-        </Button>
-      </Flex>
+          <Flex gap={"2"}>
+            {task.status !== "done" && (
+              <>
+                <Button
+                  color={getActionColor(task.status)}
+                  style={{ cursor: "pointer" }}
+                  onClick={handleUpdate}
+                >
+                  {getActionText(task.status)}
+                </Button>
+                <Button
+                  color="yellow"
+                  style={{ cursor: "pointer" }}
+                  onClick={handleEditToggle}
+                >
+                  Editar
+                </Button>
+              </>
+            )}
+            <Button
+              color="red"
+              onClick={() => handleDelete(task.id)}
+              style={{ cursor: "pointer" }}
+            >
+              Excluir
+            </Button>
+          </Flex>
+        </>
+      )}
     </Card>
   );
 };
