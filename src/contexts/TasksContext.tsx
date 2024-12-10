@@ -56,9 +56,6 @@ export const TasksContextsProvider: React.FC<TasksContextsProviderProps> = ({
     });
   };
 
-  const editTask = () =>{
-    
-  }
 
   return (
     <TasksContext.Provider
